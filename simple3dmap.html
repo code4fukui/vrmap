@@ -11,7 +11,7 @@
 </head>
 <body>
 
-  <script src="https://unpkg.com/three@0.106.2/build/three.min.js"></script>
+<script src="https://unpkg.com/three@0.106.2/build/three.min.js"></script>
 <script src="https://unpkg.com/three@0.106.2/examples/js/loaders/GLTFLoader.js"></script>
 
   <div id='map'></div>
@@ -21,46 +21,51 @@
   <button type="button" class="c1" name="photo" id="btn_setstyledark">ダークモード風</button>
 </div>
 <script type="module">
-  import { maplibregl } from "https://taisukef.github.io/maplibre-gl-js/maplibre-gl-es.js";
+import { maplibregl } from "https://taisukef.github.io/maplibre-gl-js/maplibre-gl-es.js";
+//import * as THREE from "https://cdn.skypack.dev/three@0.136.0";
+//import { GLTFLoader } from 'https://cdn.skypack.dev/three@0.136.0/examples/jsm/loaders/GLTFLoader.js';
+//THREE.GLTFLoader = GLTFLoader;
+
+const center = [35.90386982829044, 136.1689151035864];
+
+const map = new maplibregl.Map({
+  container: 'map',
+  hash: true,
+  //style: 'https://taisukef.github.io/gsivectortile-3d-like-building/building3d.json',
+  style: "./mapsetting_nobigbuilding.json",
+  center: [center[1], center[0]], // opposite!
+  zoom: 15,
+  minZoom: 4,
+  maxZoom: 17.99,
+  bearing: -40,
+  pitch: 60,
+  doubleClickZoom: false,
+  localIdeographFontFamily: false
+});
+
+//UI
+map.addControl(new maplibregl.NavigationControl(), 'bottom-right');
+map.addControl(new maplibregl.ScaleControl());
+map.showTileBoundaries = false;
+map.showCollisionBoxes = false;
+
+//地図切替え
+btn_setstylestd.onclick = () => {
+  map.setStyle('./building3d.json');
+};
+btn_setstylephoto.onclick = () => {
+  map.setStyle('./building3dphoto.json');
+};
+btn_setstyledark.onclick = () => {
+  map.setStyle('./building3ddark.json');
+};
   
-  const map = new maplibregl.Map({
-    container: 'map',
-    hash: true,
-    style: 'https://taisukef.github.io/gsivectortile-3d-like-building/building3d.json',
-    center: [136.1839217677216, 35.95663657976263], // opposite!
-    zoom: 15,
-    minZoom: 4,
-    maxZoom: 17.99,
-    bearing: -40,
-    pitch: 60,
-    doubleClickZoom: false,
-    localIdeographFontFamily: false
-  });
+const getThreeDLayer = (id, modelurl, lat, lng, alt, rotate, scale) => {
+  const modelOrigin = [lng, lat];
+  const modelAltitude = alt;
+  const modelRotate = [rotate, 0, 0];
   
-  //UI
-  map.addControl(new maplibregl.NavigationControl(), 'bottom-right');
-  map.addControl(new maplibregl.ScaleControl());
-  map.showTileBoundaries = false;
-  map.showCollisionBoxes = false;
-  
-  //地図切替え
-  btn_setstylestd.onclick = () => {
-    map.setStyle('./building3d.json');
-  };
-  btn_setstylephoto.onclick = () => {
-    map.setStyle('./building3dphoto.json');
-  };
-  btn_setstyledark.onclick = () => {
-    map.setStyle('./building3ddark.json');
-  };
-  
-const getThreeDLayer = () => {
-  //
-  // parameters to ensure the model is georeferenced correctly on the map
-  //const modelOrigin = [148.9819, -35.39847];
-  const modelOrigin = [136.1839217677216, 35.95663657976263];
-  const modelAltitude = 0;
-  const modelRotate = [Math.PI / 2, 0, 0];
+  const gltfurl = modelurl;
   
   const modelAsMercatorCoordinate = maplibregl.MercatorCoordinate.fromLngLat(
     modelOrigin,
@@ -69,6 +74,7 @@ const getThreeDLayer = () => {
   console.log(modelAsMercatorCoordinate)
   
   // transformation parameters to position, rotate and scale the 3D model onto the map
+  //const scale = modelAsMercatorCoordinate.meterInMercatorCoordinateUnits(); // 3e-8
   const modelTransform = {
     translateX: modelAsMercatorCoordinate.x,
     translateY: modelAsMercatorCoordinate.y,
@@ -79,14 +85,14 @@ const getThreeDLayer = () => {
     /* Since our 3D model is in real world meters, a scale transform needs to be
     * applied since the CustomLayerInterface expects units in MercatorCoordinates.
     */
-    scale: modelAsMercatorCoordinate.meterInMercatorCoordinateUnits()
+    scale,
   };
-  
-  const THREE = window.THREE;
+
+  //const THREE = window.THREE;
   
   // configuration of the custom layer for a 3D model per the CustomLayerInterface
   const customLayer = {
-    id: '3d-model',
+    id,
     type: 'custom',
     renderingMode: '3d',
     onAdd: function (map, gl) {
@@ -104,8 +110,9 @@ const getThreeDLayer = () => {
       
       // use the three.js GLTF loader to add the 3D model to the three.js scene
       const loader = new THREE.GLTFLoader();
+      //const loader = new GLTFLoader();
       loader.load(
-        'https://maplibre.org/maplibre-gl-js-docs/assets/34M_17/34M_17.gltf',
+        gltfurl,
         function (gltf) {
           this.scene.add(gltf.scene);
         }.bind(this)
@@ -116,9 +123,10 @@ const getThreeDLayer = () => {
     this.renderer = new THREE.WebGLRenderer({
       canvas: map.getCanvas(),
       context: gl,
-      antialias: true
+      //antialias: true,
+      //outputEncoding: THREE.sRGBEncoding,
     });
-    
+    this.renderer.outputEncoding = THREE.sRGBEncoding;
     this.renderer.autoClear = false;
   },
   render: function (gl, matrix) {
@@ -137,21 +145,21 @@ const getThreeDLayer = () => {
     
     const m = new THREE.Matrix4().fromArray(matrix);
     const l = new THREE.Matrix4()
-    .makeTranslation(
-    modelTransform.translateX,
-    modelTransform.translateY,
-    modelTransform.translateZ
-    )
-    .scale(
-    new THREE.Vector3(
-    modelTransform.scale,
-    -modelTransform.scale,
-    modelTransform.scale
-    )
-    )
-    .multiply(rotationX)
-    .multiply(rotationY)
-    .multiply(rotationZ);
+      .makeTranslation(
+        modelTransform.translateX,
+        modelTransform.translateY,
+        modelTransform.translateZ
+      )
+      .scale(
+        new THREE.Vector3(
+          modelTransform.scale,
+          -modelTransform.scale,
+          modelTransform.scale
+        )
+      )
+      .multiply(rotationX)
+      .multiply(rotationY)
+      .multiply(rotationZ);
     
     this.camera.projectionMatrix = m.multiply(l);
     this.renderer.state.reset();
@@ -162,9 +170,23 @@ const getThreeDLayer = () => {
   return customLayer;
 }
 
-map.on('style.load', function () {
-  const threed = getThreeDLayer();
-  map.addLayer(threed); // , "threed_layer");
+map.on('style.load', () => {
+  // 越前市役所
+  map.addLayer(getThreeDLayer(
+    "echizen-city",
+    "https://code4fukui.github.io/glb-viewer/echizen-cityhall-all.glb",
+    35.90386982829044 - .0002, 136.1689151035864 + .0001,
+    0, Math.PI / 2, 3.0e-8
+  ));
+  /*
+  // 鯖江市役所
+  map.addLayer(getThreeDLayer(
+    "sabae-city",
+    "https://code4fukui.github.io/glb-viewer/sabae-city.glb",
+    35.95663657976263, 136.1839217677216,
+    0, Math.PI / 2,
+  ));
+  */
 });
 
 
