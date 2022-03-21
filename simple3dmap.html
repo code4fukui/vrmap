@@ -1,25 +1,23 @@
 <!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width">
-
-  <style>
-    body { margin:0; padding:0; }
+<title>越前市役所VRマップ</title>
+<style>
+body {
+  margin: 0;
+  padding: 0;
+}
 #map {
   position: absolute;
   height: 100%;
   width: 100%;
 }
-  </style>
+</style>
 </head>
 <body>
 
 <script src="https://unpkg.com/three@0.106.2/build/three.min.js"></script>
 <script src="https://unpkg.com/three@0.106.2/examples/js/loaders/GLTFLoader.js"></script>
 
-  <div id='map'></div>
-<div id='menu'>
-  <button type="button" class="c1" name="std" id="btn_setstylestd">標準地図</button>
-  <button type="button" class="c1" name="photo" id="btn_setstylephoto">写真＋注記</button>
-  <button type="button" class="c1" name="photo" id="btn_setstyledark">ダークモード風</button>
-</div>
+<div id='map'></div>
 <script type="module">
 import { maplibregl } from "https://taisukef.github.io/maplibre-gl-js/maplibre-gl-es.js";
 //import * as THREE from "https://cdn.skypack.dev/three@0.136.0";
@@ -49,17 +47,6 @@ map.addControl(new maplibregl.ScaleControl());
 map.showTileBoundaries = false;
 map.showCollisionBoxes = false;
 
-//地図切替え
-btn_setstylestd.onclick = () => {
-  map.setStyle('./building3d.json');
-};
-btn_setstylephoto.onclick = () => {
-  map.setStyle('./building3dphoto.json');
-};
-btn_setstyledark.onclick = () => {
-  map.setStyle('./building3ddark.json');
-};
-  
 const getThreeDLayer = (id, modelurl, lat, lng, alt, rotate, scale) => {
   const modelOrigin = [lng, lat];
   const modelAltitude = alt;
