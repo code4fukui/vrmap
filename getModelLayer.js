@@ -7,7 +7,8 @@ import { maplibregl } from "https://taisukef.github.io/maplibre-gl-js/maplibre-g
 export const getModelLayer = (map, id, modelurl, lat, lng, alt, rotate, scale) => {
   const modelOrigin = [lng, lat];
   const modelAltitude = alt;
-  const modelRotate = [rotate, 0, 0];
+  //const modelRotate = [rotate, 0, 0];
+  const modelRotate = [Math.PI / 2, rotate, 0];
   
   const gltfurl = modelurl;
   
